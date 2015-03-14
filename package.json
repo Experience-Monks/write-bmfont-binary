@@ -1,0 +1,49 @@
+{
+  "name": "write-bmfont-binary",
+  "version": "1.0.0",
+  "description": "writes BMFont object to a binary Buffer",
+  "main": "index.js",
+  "license": "MIT",
+  "author": {
+    "name": "Matt DesLauriers",
+    "email": "dave.des@gmail.com",
+    "url": "https://github.com/mattdesl"
+  },
+  "dependencies": {
+    "smart-buffer": "^1.0.1"
+  },
+  "devDependencies": {
+    "bmfont-lato": "^2.1.1",
+    "tape": "^3.5.0"
+  },
+  "scripts": {
+    "test": "node test.js"
+  },
+  "keywords": [
+    "bmfont",
+    "binary",
+    "format",
+    "fmt",
+    "fonts",
+    "font",
+    "text",
+    "angel",
+    "code",
+    "angelcode",
+    "bm",
+    "bitmap",
+    "bitmaps",
+    "glyph",
+    "glyphs",
+    "glyphdesigner",
+    "hiero"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Jam3/write-bmfont-binary.git"
+  },
+  "homepage": "https://github.com/Jam3/write-bmfont-binary",
+  "bugs": {
+    "url": "https://github.com/Jam3/write-bmfont-binary/issues"
+  }
+}
