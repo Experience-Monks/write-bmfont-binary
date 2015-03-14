@@ -1,6 +1,6 @@
 {
   "name": "write-bmfont-binary",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "writes BMFont object to a binary Buffer",
   "main": "index.js",
   "license": "MIT",
