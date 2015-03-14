@@ -1,15 +1,16 @@
+var number = require('as-number')
 var VERSION = 3
-var SmartBuffer = require('smart-buffer')
 var NUL = new Buffer([0x00])
 var BLOCK = 5
+var HEADER = [
+  66, 77, 70, VERSION
+]
 
 module.exports = function writeBMFontBinary(font) {
-  var header = new Buffer([
-    66, 77, 70, VERSION
-  ])
+  var header = new Buffer(HEADER)
 
   var infoBuf = createInfo(font.info)
-  var commonBuf = createCommon(font.common)
+  var commonBuf = createCommon(font.common, font)
   var pages = createPages(font.pages)
   var chars = createChars(font.chars)
   var kernings = createKernings(font.kernings)
@@ -23,8 +24,15 @@ module.exports = function writeBMFontBinary(font) {
   ])  
 }
 
+function nulstr(str) {
+  return Buffer.concat([
+    new Buffer(str, 'utf8'),
+    NUL
+  ])
+}
+
 function block(id, size, blockSize) {
-  blockSize = typeof blockSize === 'number' ? blockSize : size
+  blockSize = number(blockSize, size)
   var buf = new Buffer(BLOCK + size)
   //id / blockSize
   buf.writeUInt8(id, 0)
@@ -32,59 +40,75 @@ function block(id, size, blockSize) {
   return buf
 }
 
+function bitset(field, n) {
+  field ^= (-1 ^ field) & (1 << n)
+  return field
+}
+
 function createInfo(info) {
-  var name = Buffer.concat([
-    new Buffer(info.face, 'utf8'),
-    NUL
-  ])
+  var name = nulstr(info.face)
 
   var i = BLOCK
   var infoSize = 14
   var buf = block(1, infoSize, infoSize+name.length)
-  //fontSize
-  buf.writeInt16LE(info.size, i)
-  //bitField & charSet
-  buf.writeUInt8(0, i+2) //not yet supported
-  buf.writeUInt8(0, i+3) //not yet supported
-  buf.writeUInt16LE(info.stretchH, i+4)
-  buf.writeUInt8(info.aa, i+6)
+  var fontSize = info.size||0
+  buf.writeInt16LE(fontSize, i)
+
+  //bit fields
+  var field = 0x00
+  if (info.smooth)
+    field = bitset(field, 7)
+  if (info.unicode)
+    field = bitset(field, 6)
+  if (info.italic)
+    field = bitset(field, 5)
+  if (info.bold)
+    field = bitset(field, 4)
+  if (info.fixedHeight)
+    field = bitset(field, 3)
+  buf.writeUInt8(field, i+2)
+
+  var stretchH = number(info.stretchH, 100)
+
+  //charSet OEM, not yet supported
+  buf.writeUInt8(0, i+3) 
+  buf.writeUInt16LE(stretchH, i+4)
+  buf.writeUInt8(info.aa||0, i+6)
   info.padding.forEach(function(val, c) {
-    buf.writeUInt8(val, i+7+c)
+    buf.writeUInt8(val||0, i+7+c)
   })
   info.spacing.forEach(function(val, c) {
-    buf.writeUInt8(val, i+11+c)
+    buf.writeUInt8(val||0, i+11+c)
   })
-  buf.writeUInt8(info.outline, i+13)
+  buf.writeUInt8(info.outline||0, i+13)
   return Buffer.concat([
     buf,
     name
   ])
 }
 
-function createCommon(common) {
+function createCommon(common, font) {
   var i = BLOCK
   var commonSize = 15
   var buf = block(2, commonSize)
+  var pages = number(common.pages, font.pages.length)
 
-  buf.writeUInt16LE(common.lineHeight, i)
-  buf.writeUInt16LE(common.base, i+2)
-  buf.writeUInt16LE(common.scaleW, i+4)
-  buf.writeUInt16LE(common.scaleH, i+6)
-  buf.writeUInt16LE(common.pages, i+8)
+  buf.writeUInt16LE(common.lineHeight||0, i)
+  buf.writeUInt16LE(common.base||0, i+2)
+  buf.writeUInt16LE(common.scaleW||0, i+4)
+  buf.writeUInt16LE(common.scaleH||0, i+6)
+  buf.writeUInt16LE(pages, i+8)
   buf.writeUInt8(0, i+10) //packed not yet supported
-  buf.writeUInt8(common.alphaChnl, i+11)
-  buf.writeUInt8(common.redChnl, i+12)
-  buf.writeUInt8(common.greenChnl, i+13)
-  buf.writeUInt8(common.blueChnl, i+14)
+  buf.writeUInt8(number(common.alphaChnl, 1), i+11)
+  buf.writeUInt8(common.redChnl||0, i+12)
+  buf.writeUInt8(common.greenChnl||0, i+13)
+  buf.writeUInt8(common.blueChnl||0, i+14)
   return buf
 }
 
 function createPages(pages) {
   var names = Buffer.concat(pages.map(function(str) {
-    return Buffer.concat([
-      new Buffer(str, 'utf8'),
-      NUL
-    ])
+    return nulstr(str)
   }))
 
   var buf = new Buffer(BLOCK)
@@ -103,16 +127,18 @@ function createChars(chars) {
   var buf = block(4, charsSize)
   chars.forEach(function(char, c) {
     var off = c*20
+    if (typeof char.id !== 'number')
+      throw new Error('malformed font object, glyph has no ID: '+char)
     buf.writeUInt32LE(char.id, i + 0 + off)
-    buf.writeUInt16LE(char.x, i + 4 + off)
-    buf.writeUInt16LE(char.y, i + 6 + off)
-    buf.writeUInt16LE(char.width, i + 8 + off)
-    buf.writeUInt16LE(char.height, i + 10 + off)
-    buf.writeInt16LE(char.xoffset, i + 12 + off)
-    buf.writeInt16LE(char.yoffset, i + 14 + off)
-    buf.writeInt16LE(char.xadvance, i + 16 + off)
-    buf.writeUInt8(char.page, i + 18 + off)
-    buf.writeUInt8(char.chnl, i + 19 + off)
+    buf.writeUInt16LE(char.x||0, i + 4 + off)
+    buf.writeUInt16LE(char.y||0, i + 6 + off)
+    buf.writeUInt16LE(char.width||0, i + 8 + off)
+    buf.writeUInt16LE(char.height||0, i + 10 + off)
+    buf.writeInt16LE(char.xoffset||0, i + 12 + off)
+    buf.writeInt16LE(char.yoffset||0, i + 14 + off)
+    buf.writeInt16LE(char.xadvance||0, i + 16 + off)
+    buf.writeUInt8(char.page||0, i + 18 + off)
+    buf.writeUInt8(number(char.chnl, 15), i + 19 + off)
   })
   return buf
 }
@@ -125,9 +151,12 @@ function createKernings(kernings) {
   var buf = block(5, kernSize)
   kernings.forEach(function(kern, c) {
     var off = c*10
+    if (typeof kern.first !== 'number'
+        || typeof kern.second !== 'number')
+      throw new Error('malformed font object; kerning pairs do not have first/second char IDs')
     buf.writeUInt32LE(kern.first, i + 0 + off)
     buf.writeUInt32LE(kern.second, i + 4 + off)
-    buf.writeInt16LE(kern.amount, i + 8 + off)
+    buf.writeInt16LE(kern.amount||0, i + 8 + off)
   })
   return buf
 }
