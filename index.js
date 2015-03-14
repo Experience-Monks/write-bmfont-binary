@@ -2,20 +2,18 @@ var number = require('as-number')
 var VERSION = 3
 var NUL = new Buffer([0x00])
 var BLOCK = 5
-var HEADER = [
+var HEADER = new Buffer([
   66, 77, 70, VERSION
-]
+])
 
 module.exports = function writeBMFontBinary(font) {
-  var header = new Buffer(HEADER)
-
   var infoBuf = createInfo(font.info)
   var commonBuf = createCommon(font.common, font)
   var pages = createPages(font.pages)
   var chars = createChars(font.chars)
   var kernings = createKernings(font.kernings)
   return Buffer.concat([
-    header,
+    HEADER,
     infoBuf,
     commonBuf,
     pages,

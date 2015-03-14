@@ -19,7 +19,7 @@ See also:
 
 - [load-bmfont](https://www.npmjs.com/package/load-bmfont)
 - [read-bmfont-binary](https://www.npmjs.com/package/read-bmfont-binary)
-- [bmfont2json](https://github.com/mattdesl/bmfont2json)
+- [bmfont2json](https://www.npmjs.com/package/bmfont2json)
 
 ## Usage
 
