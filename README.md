@@ -15,11 +15,9 @@ fs.writeFile('fonts/Lato.bin', buffer, function(err) {
 })
 ```
 
-See also: 
+## See Also
 
-- [load-bmfont](https://www.npmjs.com/package/load-bmfont)
-- [read-bmfont-binary](https://www.npmjs.com/package/read-bmfont-binary)
-- [bmfont2json](https://www.npmjs.com/package/bmfont2json)
+See [text-modules](https://www.npmjs.com/package/text-modules) for related modules.
 
 ## Usage
 
