@@ -73,10 +73,10 @@ function createInfo(info) {
   buf.writeUInt16LE(stretchH, i+4)
   buf.writeUInt8(info.aa||0, i+6)
   info.padding.forEach(function(val, c) {
-    buf.writeUInt8(val||0, i+7+c)
+    buf.writeInt8(val||0, i+7+c)
   })
   info.spacing.forEach(function(val, c) {
-    buf.writeUInt8(val||0, i+11+c)
+    buf.writeInt8(val||0, i+11+c)
   })
   buf.writeUInt8(info.outline||0, i+13)
   return Buffer.concat([

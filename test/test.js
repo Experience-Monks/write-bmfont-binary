@@ -18,6 +18,15 @@ test('should be able to write bmfont-lato', function(t) {
   t.end()
 })
 
+test('should be able to write bmfont with negative padding', function(t) {
+  var font2 = require('./font2.json')
+  t.deepEqual(font2.info.spacing, [-8, -8], 'working on negative spacing')
+
+  var buffer = write(font2)
+  t.ok(buffer, 'writes negative padding to a buffer')
+  t.end()
+})
+
 test('writes BMFont JSON to BIN', function(t) {
   var copy = {
     common: font.common,
